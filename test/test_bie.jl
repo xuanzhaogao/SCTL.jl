@@ -214,8 +214,8 @@ end
         @test size(U) == (3, 2nt)
         @test maximum(abs.(U[:, 1:nt] .- inside)) < 1e-6
         outside === nothing || @test maximum(abs.(U[:, nt+1:end] .- outside)) < 1e-6
-        # far field = the smooth node quadrature
-        @test U[:, nt+1:end] ≈ kernel_eval(ker, XS, normal_dim(ker) > 0 ? NS : nothing, F .* node_weights(EL)', Xout) rtol = 1e-8
+        # far field = the smooth node quadrature (atol: the double layer is ~1e-9 there, i.e. zero up to rounding)
+        @test U[:, nt+1:end] ≈ kernel_eval(ker, XS, normal_dim(ker) > 0 ? NS : nothing, F .* node_weights(EL)', Xout) rtol = 1e-8 atol = 1e-12
     end
 
     # Helmholtz single layer of density 1: e^{ik} sin(kr)/(kr) inside, sin(k) e^{ikr}/(kr) outside

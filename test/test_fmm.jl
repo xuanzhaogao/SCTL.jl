@@ -45,9 +45,10 @@ end
             close(fmm)
         end
     end
-    # one-shot form; below the threshold this is an exact direct sum
+    # one-shot form; below the threshold this is a direct sum, with the kernel evaluated to about `digits` (how much
+    # better depends on the CPU's reciprocal square root: 1e-9 with AVX-512, 3e-7 with AVX2 at digits = 6)
     F = reshape(_lcg(3000, 5), 1, :)
-    @test fmm_eval(Laplace3D_FxU(), Xs, F, Xt[:, 1:500]; digits = 6) ≈ kernel_eval(Laplace3D_FxU(), Xs, F, Xt[:, 1:500])
+    @test fmm_eval(Laplace3D_FxU(), Xs, F, Xt[:, 1:500]; digits = 6) ≈ kernel_eval(Laplace3D_FxU(), Xs, F, Xt[:, 1:500]) rtol = 1e-5
 end
 
 @testset "ParticleFMM errors" begin
