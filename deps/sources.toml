@@ -1,6 +1,6 @@
 # Sources of the header-only libraries compiled into libsctljl, pinned to the commits of the git submodules
 # deps/SCTL and deps/pvfmm. deps/build.jl downloads them from here when the submodules are not checked out
-# (e.g. after `Pkg.add(url = ...)`, which does not fetch submodules). test/runtests.jl checks that the commits match
+# (e.g. in a `Pkg.develop(url = ...)` clone, which has no submodules). test/runtests.jl checks that the commits match
 # the submodules.
 
 [SCTL]

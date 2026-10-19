@@ -22,6 +22,10 @@ git clone --recursive git@github.com:xuanzhaogao/SCTL.jl.git   # or, in an exist
 using Pkg; Pkg.develop(path="/path/to/SCTL.jl"); Pkg.build("SCTL")
 ```
 
+Or, without a clone of your own, `Pkg.develop(url = "https://github.com/xuanzhaogao/SCTL.jl")`: that clone has no
+submodules, so `Pkg.build` downloads the pinned SCTL and PVFMM sources. (`Pkg.add(url = ...)` does not work for a
+repository with submodules: Pkg stops with "cannot get submodules without a working tree".)
+
 To build against another SCTL checkout, set `ENV["SCTL_ROOT"]` before `Pkg.build`.
 
 The build takes a few minutes, since the boundary-integral operators are template-heavy (about 2 min with 8 cores and
@@ -40,7 +44,7 @@ around 1.7 GB of RAM per compiler process). Build options are environment variab
 By default the library includes PVFMM (headers only, compiled without MPI) and BLAS/LAPACK. The BLAS/LAPACK are
 Julia's own, reached through libblastrampoline, so no system libraries are needed; while an SCTL routine runs, Julia's
 BLAS is limited to one thread (SCTL parallelizes with OpenMP). Without the git submodules (e.g. after
-`Pkg.add(url = ...)`), `Pkg.build` downloads the SCTL and PVFMM commits pinned in `deps/sources.toml`. There is no FFTW by default; SCTL
+`Pkg.develop(url = ...)`), `Pkg.build` downloads the SCTL and PVFMM commits pinned in `deps/sources.toml`. There is no FFTW by default; SCTL
 uses its own FFT. `SCTL.has_feature(:PVFMM)`, `(:BLAS)` and so on report what was compiled in. `SCTL_JL_LIB=/path/libsctljl.so` points the package at another build; it is read when
 the package is precompiled, so changing it later needs a recompile.
 

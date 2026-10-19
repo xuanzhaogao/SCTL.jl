@@ -16,7 +16,7 @@ const PKG_ROOT = normpath(joinpath(@__DIR__, ".."))
 enabled(var) = get(ENV, var, "1") ∉ ("0", "false", "no", "off")
 
 # Download the pinned sources of `name` (deps/sources.toml) into deps/downloads, for installations without the git
-# submodules (`Pkg.add(url = ...)` does not fetch them).
+# submodules (a `Pkg.develop(url = ...)` clone does not have them).
 function fetch_source(name, probe)
     src = Base.parsed_toml(joinpath(@__DIR__, "sources.toml"))[name]
     dest = joinpath(@__DIR__, "downloads", "$name-$(src["commit"])")
