@@ -4,7 +4,7 @@
 #
 # Normally driven by deps/build.jl (`Pkg.build("SCTL")`).
 
-SCTL_ROOT ?= ../../SCTL
+SCTL_ROOT ?= ../deps/SCTL
 CXX ?= g++
 BUILDDIR ?= ../deps/usr
 MARCH ?= -march=native

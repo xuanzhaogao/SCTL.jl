@@ -1,10 +1,10 @@
 #!/bin/bash
-# Compare SCTL.jl against native C++ SCTL. Usage: bench/run.sh [SCTL_ROOT] [threads...]
+# Compare SCTL.jl against native C++ SCTL. Usage: bench/run.sh [SCTL_ROOT (default: deps/SCTL)] [threads...]
 # Builds the native baseline with csrc/Makefile's optimization flags, writes inputs via the Julia script, and prints
 # both timings side by side for each OMP_NUM_THREADS value (default: 1 and 16).
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
-SCTL_ROOT=${1:-$HERE/../../SCTL}; shift || true
+SCTL_ROOT=${1:-$HERE/../deps/SCTL}; shift || true
 THREADS=${@:-1 16}
 WORK=${BENCH_DIR:-$(mktemp -d)}
 mkdir -p "$WORK"

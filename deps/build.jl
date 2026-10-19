@@ -1,7 +1,7 @@
 # Compiles the C-ABI shim (csrc/) against the header-only SCTL library into deps/usr/lib/libsctljl.so.
 #
 # Environment variables:
-#   SCTL_ROOT          path to the SCTL checkout (default: deps/SCTL, then ../SCTL next to this package)
+#   SCTL_ROOT          path to the SCTL checkout (default: the deps/SCTL git submodule, then ../SCTL next to this package)
 #   CXX                C++17 compiler with OpenMP (default: g++)
 #   SCTL_JL_MARCH      architecture flags (default: -march=native); e.g. "-march=x86-64-v3" for a portable build
 #   SCTL_JL_CXXFLAGS   extra compiler flags, e.g. "-DSCTL_HAVE_FFTW"
@@ -17,7 +17,7 @@ function find_sctl_root()
         isfile(joinpath(c, "include", "sctl.hpp")) && return normpath(abspath(c))
     end
     error("SCTL headers not found (looked in: $(join(candidates, ", "))). " *
-          "Clone https://github.com/dmalhotra/SCTL and set ENV[\"SCTL_ROOT\"] to it.")
+          "Run `git submodule update --init` in $PKG_ROOT, or set ENV[\"SCTL_ROOT\"] to an SCTL checkout.")
 end
 
 function build()

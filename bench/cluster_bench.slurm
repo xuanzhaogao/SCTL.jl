@@ -13,7 +13,7 @@
 
 set -euo pipefail
 SRC=$SLURM_SUBMIT_DIR                                   # the SCTL.jl checkout
-SCTL_ROOT=${SCTL_ROOT:-$SRC/../SCTL}
+SCTL_ROOT=${SCTL_ROOT:-$SRC/deps/SCTL}
 export JULIA=${JULIA:-$HOME/.juliaup/bin/julia}
 OUT=$SRC/bench/results/$(hostname -s)_$SLURM_JOB_ID
 WORK=${TMPDIR:-/tmp}/sctljl_bench_$SLURM_JOB_ID

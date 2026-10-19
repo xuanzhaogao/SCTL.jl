@@ -9,19 +9,24 @@ exceptions thrown inside Julia callbacks (GMRES operators, ODE right-hand sides,
 
 ## Installation
 
-Requirements: a C++17 compiler with OpenMP (GCC ≥ 9), `make`, and an SCTL checkout.
+Requirements: a C++17 compiler with OpenMP (GCC ≥ 9) and `make`. SCTL itself comes as a git submodule
+(`deps/SCTL`, pinned to the tested commit of https://github.com/dmalhotra/SCTL):
 
+```bash
+git clone --recursive git@github.com:xuanzhaogao/SCTL.jl.git   # or, in an existing clone: git submodule update --init
+```
 ```julia
-ENV["SCTL_ROOT"] = "/path/to/SCTL"     # default: deps/SCTL, then ../SCTL next to this package
 using Pkg; Pkg.develop(path="/path/to/SCTL.jl"); Pkg.build("SCTL")
 ```
+
+To build against another SCTL checkout, set `ENV["SCTL_ROOT"]` before `Pkg.build`.
 
 The build takes a few minutes, since the boundary-integral operators are template-heavy (about 2 min with 8 cores and
 around 1.7 GB of RAM per compiler process). Build options are environment variables read by `deps/build.jl`:
 
 | variable | default | purpose |
 |:-|:-|:-|
-| `SCTL_ROOT` | `deps/SCTL`, `../SCTL` | SCTL checkout |
+| `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL` | SCTL checkout |
 | `CXX` | `g++` | compiler |
 | `SCTL_JL_MARCH` | `-march=native` | e.g. `-march=x86-64-v3` for a library shared by machines with different CPUs |
 | `SCTL_JL_CXXFLAGS` | | extra flags, e.g. `-DSCTL_HAVE_FFTW` |
