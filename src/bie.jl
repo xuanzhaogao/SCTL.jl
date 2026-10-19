@@ -458,7 +458,7 @@ Precompute the far-field quadrature, the near-target lists and the singular/near
 """
 function setup!(op::BoundaryIntegralOp)
     _check_targets(op)
-    _check(ccall((:sctljl_bie_setup, libsctljl), Cint, (Ptr{Cvoid},), op))
+    @serial_blas _check(ccall((:sctljl_bie_setup, libsctljl), Cint, (Ptr{Cvoid},), op))
     return op
 end
 
@@ -484,7 +484,7 @@ function compute_potential!(U::Array{Float64}, op::BoundaryIntegralOp, F)
     length(F_) == nin || throw(DimensionMismatch("density must have dim(op, 1) = $nin values, got $(length(F_))"))
     length(U) == nout || throw(DimensionMismatch("potential must have dim(op, 2) = $nout values, got $(length(U))"))
     nout == 0 && return U
-    _check(ccall((:sctljl_bie_compute_potential, libsctljl), Cint, (Ptr{Cvoid}, Ptr{Float64}, Int64, Ptr{Float64}, Int64),
+    @serial_blas _check(ccall((:sctljl_bie_compute_potential, libsctljl), Cint, (Ptr{Cvoid}, Ptr{Float64}, Int64, Ptr{Float64}, Int64),
                  op, U, nout, F_, nin))
     return U
 end

@@ -22,6 +22,10 @@ git clone --recursive git@github.com:xuanzhaogao/SCTL.jl.git   # or, in an exist
 using Pkg; Pkg.develop(path="/path/to/SCTL.jl"); Pkg.build("SCTL")
 ```
 
+Or, without a clone of your own, `Pkg.develop(url = "https://github.com/xuanzhaogao/SCTL.jl")`: that clone has no
+submodules, so `Pkg.build` downloads the pinned SCTL and PVFMM sources. (`Pkg.add(url = ...)` does not work for a
+repository with submodules: Pkg stops with "cannot get submodules without a working tree".)
+
 To build against another SCTL checkout, set `ENV["SCTL_ROOT"]` before `Pkg.build`.
 
 The build takes a few minutes, since the boundary-integral operators are template-heavy (about 2 min with 8 cores and
@@ -29,7 +33,7 @@ around 1.7 GB of RAM per compiler process). Build options are environment variab
 
 | variable | default | purpose |
 |:-|:-|:-|
-| `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL` | SCTL checkout |
+| `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL`, then a download | SCTL checkout |
 | `CXX` | `g++` | compiler |
 | `SCTL_JL_MARCH` | `-march=native` | e.g. `-march=x86-64-v3` for a library shared by machines with different CPUs |
 | `SCTL_JL_PVFMM` | `1` | `0` builds without the FMM; `PVFMM_ROOT` (default: the `deps/pvfmm` submodule) picks another PVFMM checkout |
@@ -37,8 +41,10 @@ around 1.7 GB of RAM per compiler process). Build options are environment variab
 | `SCTL_JL_CXXFLAGS` | | extra flags, e.g. `-DSCTL_HAVE_FFTW` |
 | `SCTL_JL_LDFLAGS` | | extra link flags, e.g. `-lfftw3` |
 
-By default the library includes PVFMM (headers only, compiled without MPI) and BLAS/LAPACK. The BLAS/LAPACK come from
-the `OpenBLAS32_jll` package (an LP64 OpenBLAS), so no system libraries are needed. There is no FFTW by default; SCTL
+By default the library includes PVFMM (headers only, compiled without MPI) and BLAS/LAPACK. The BLAS/LAPACK are
+Julia's own, reached through libblastrampoline, so no system libraries are needed; while an SCTL routine runs, Julia's
+BLAS is limited to one thread (SCTL parallelizes with OpenMP). Without the git submodules (e.g. after
+`Pkg.develop(url = ...)`), `Pkg.build` downloads the SCTL and PVFMM commits pinned in `deps/sources.toml`. There is no FFTW by default; SCTL
 uses its own FFT. `SCTL.has_feature(:PVFMM)`, `(:BLAS)` and so on report what was compiled in. `SCTL_JL_LIB=/path/libsctljl.so` points the package at another build; it is read when
 the package is precompiled, so changing it later needs a recompile.
 

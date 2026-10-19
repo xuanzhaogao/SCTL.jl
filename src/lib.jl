@@ -157,9 +157,57 @@ set_num_threads(n::Integer) = ccall((:sctljl_set_num_threads, libsctljl), Cvoid,
     SCTL.has_feature(name)
 
 Whether the compiled library has an optional dependency enabled; `name` is one of `:PVFMM`, `:BLAS`, `:LAPACK`, `:FFTW`,
-`:MPI`.
+`:MPI`, or `:BLAS_LBT` (BLAS and LAPACK are Julia's own, through libblastrampoline: the default build).
 """
 has_feature(name) = ccall((:sctljl_have, libsctljl), Cint, (Cstring,), string(name)) != 0
+
+# ---- BLAS ----
+#
+# In the default build (SCTLJL_BLAS_LBT, csrc/capi_blas.cpp) SCTL's BLAS/LAPACK calls go to Julia's BLAS through
+# libblastrampoline: the BLAS of LinearAlgebra (OpenBLAS, or MKL etc. if loaded), which allows many threads to call
+# it at once. SCTL calls BLAS from inside its OpenMP parallel regions (e.g. every thread of the FMM), where a
+# multi-threaded BLAS oversubscribes the cores (on 96 cores the FMM became 7x slower); the parallelism is SCTL's
+# OpenMP instead. So library calls that can reach BLAS run inside `_serial_blas`, which limits Julia's BLAS to one
+# thread for their duration and restores the previous count afterwards (nested and concurrent calls share one
+# save/restore). Other Julia tasks calling BLAS meanwhile also get one thread.
+
+const _BLAS_LBT = Ref(false)
+const _BLAS_LOCK = ReentrantLock()
+const _BLAS_DEPTH = Ref(0)
+const _BLAS_SAVED = Ref(1)
+
+function _init_blas()
+    _BLAS_LBT[] = has_feature(:BLAS_LBT)
+    _BLAS_LBT[] || return
+    lbt = Libdl.dlopen(LinearAlgebra.BLAS.libblastrampoline)
+    sym(s) = Libdl.dlsym(lbt, s)
+    ccall((:sctljl_set_blas, libsctljl), Cvoid, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
+          sym(:dgemm_64_), sym(:sgemm_64_), sym(:dgesvd_64_), sym(:sgesvd_64_))
+end
+
+function _serial_blas(f)
+    _BLAS_LBT[] || return f()
+    lock(_BLAS_LOCK) do
+        if _BLAS_DEPTH[] == 0
+            _BLAS_SAVED[] = LinearAlgebra.BLAS.get_num_threads()
+            _BLAS_SAVED[] == 1 || LinearAlgebra.BLAS.set_num_threads(1)
+        end
+        _BLAS_DEPTH[] += 1
+    end
+    try
+        return f()
+    finally
+        lock(_BLAS_LOCK) do
+            _BLAS_DEPTH[] -= 1
+            _BLAS_DEPTH[] == 0 && _BLAS_SAVED[] != 1 && LinearAlgebra.BLAS.set_num_threads(_BLAS_SAVED[])
+        end
+    end
+end
+
+# `@serial_blas expr`: evaluate `expr` (a library call that can reach BLAS) inside `_serial_blas`
+macro serial_blas(ex)
+    return :(_serial_blas(() -> $(esc(ex))))
+end
 
 function _check_lib()
     isfile(libsctljl) || error("""

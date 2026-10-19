@@ -29,15 +29,20 @@ Pkg.develop(path = "SCTL.jl")
 Pkg.build("SCTL")      # compiles the C++ shim into SCTL.jl/deps/usr/lib/libsctljl.so (a few minutes)
 ```
 
+Or let Pkg clone it: `Pkg.develop(url = "https://github.com/xuanzhaogao/SCTL.jl")`, then `Pkg.build("SCTL")`. Such a
+clone has no submodules, so the build downloads the SCTL and PVFMM commits pinned in `deps/sources.toml`.
+`Pkg.add(url = ...)` does not work for a package with git submodules ("cannot get submodules without a working
+tree").
+
 These environment variables are read by `Pkg.build`:
 
 | variable | default | purpose |
 |:--|:--|:--|
-| `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL` | the SCTL checkout to compile against |
+| `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL`, then a download | the SCTL checkout to compile against |
 | `CXX` | `g++` | C++ compiler |
 | `SCTL_JL_MARCH` | `-march=native` | target CPU, e.g. `-march=x86-64-v3` when one build serves different machines |
 | `SCTL_JL_PVFMM` | `1` | `0` builds without the FMM (the `deps/pvfmm` submodule); `PVFMM_ROOT` picks another checkout |
-| `SCTL_JL_BLAS` | `1` | `0` builds without BLAS/LAPACK (from the `OpenBLAS32_jll` package) |
+| `SCTL_JL_BLAS` | `1` | `0` builds without BLAS/LAPACK (by default Julia's own, see [Optional dependencies](@ref)) |
 | `SCTL_JL_CXXFLAGS` | | extra flags, e.g. `-DSCTL_HAVE_FFTW` |
 | `SCTL_JL_LDFLAGS` | | extra link flags, e.g. `-lfftw3` |
 

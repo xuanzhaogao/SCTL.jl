@@ -6,3 +6,4 @@ Manifest.toml
 *.vtk
 bench/results/
 docs/build/
+deps/downloads/

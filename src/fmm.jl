@@ -202,7 +202,7 @@ function _fmm_eval!(U, f::ParticleFMM, direct::Bool)
         throw(DimensionMismatch("output must have trg_dim*Nt = $(trg_dim(f.kernel) * f.nt) values, got $(length(U))"))
     direct && any(f.periodic) && throw(ArgumentError("direct evaluation is not periodic"))
     f.nt == 0 && return U
-    _check(ccall((:sctljl_fmm_eval, libsctljl), Cint, (Ptr{Cvoid}, Ptr{Float64}, Int64, Cint), f, U, length(U), direct))
+    @serial_blas _check(ccall((:sctljl_fmm_eval, libsctljl), Cint, (Ptr{Cvoid}, Ptr{Float64}, Int64, Cint), f, U, length(U), direct))
     return U
 end
 

@@ -77,9 +77,11 @@ SCTL parallelizes with OpenMP:
 
 - Set the number of threads with the environment variable `OMP_NUM_THREADS` before starting Julia, or at run time
   with [`SCTL.set_num_threads`](@ref). [`SCTL.get_num_threads`](@ref) reports the current value.
-- When it loads, SCTL.jl sets its own OpenBLAS (the `OpenBLAS32_jll` library, not Julia's BLAS) to one thread,
-  unless `OPENBLAS_NUM_THREADS` is set. SCTL calls BLAS inside its OpenMP loops, and a second thread pool there can
-  hang.
+- SCTL calls BLAS (Julia's own, see below) inside its OpenMP loops, where a multi-threaded BLAS would oversubscribe
+  the cores. So while an SCTL routine that can use BLAS runs (the FMM, boundary integral operators, spherical
+  harmonic transforms, quadrature construction), Julia's BLAS is limited to one thread; the previous count
+  (`BLAS.get_num_threads()`) is restored when it returns. Other Julia tasks calling BLAS at that time also get one
+  thread.
 - When it loads, SCTL.jl sets `OMP_WAIT_POLICY=PASSIVE` unless you have set it yourself. Otherwise idle OpenMP threads
   spin after each parallel region and compete with Julia's own threads. Benchmarks that call SCTL in a tight loop
   may run faster with `OMP_WAIT_POLICY=ACTIVE`.
@@ -108,15 +110,18 @@ SCTL's per-thread scratch memory, so keep callbacks free of task switches.
 By default the library includes:
 - **PVFMM**, compiled from its headers without MPI. It powers [`ParticleFMM`](@ref) and the far field of
   [`BoundaryIntegralOp`](@ref).
-- **BLAS and LAPACK**, from the `OpenBLAS32_jll` package (an OpenBLAS with 32-bit integers, as SCTL expects). It is
-  separate from Julia's own BLAS, so the two do not interfere.
+- **BLAS and LAPACK**, Julia's own (`LinearAlgebra.BLAS`: OpenBLAS, or MKL etc. if you load one) through
+  libblastrampoline. SCTL's 32-bit-integer calls are forwarded to the 64-bit interface, so no other BLAS library is
+  needed. (An earlier version used `OpenBLAS32_jll`, which is built for at most 32 threads and crashed the FMM on
+  larger nodes.) `SCTL.has_feature(:BLAS_LBT)` reports this configuration. BLAS matters mostly for the one-time FMM
+  precomputation: without it, Stokes operators take minutes instead of seconds.
 
 FFTW is not included by default; SCTL uses its own FFT. MPI is never used. [`SCTL.has_feature`](@ref) reports what the
 build includes:
 
 ```@example conv
 (; PVFMM = SCTL.has_feature(:PVFMM), BLAS = SCTL.has_feature(:BLAS), LAPACK = SCTL.has_feature(:LAPACK),
-   FFTW = SCTL.has_feature(:FFTW), MPI = SCTL.has_feature(:MPI))
+   BLAS_LBT = SCTL.has_feature(:BLAS_LBT), FFTW = SCTL.has_feature(:FFTW), MPI = SCTL.has_feature(:MPI))
 ```
 
 The FMM stores precomputed operators on disk, in [`SCTL.fmm_cache_dir`](@ref); see
