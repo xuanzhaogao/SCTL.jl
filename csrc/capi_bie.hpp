@@ -4,6 +4,7 @@
 #define SCTLJL_CAPI_BIE_HPP
 
 #include "sctljl.hpp"
+#include "fmm_schemes.hpp"
 
 // All templates / inline functions, so including it in several translation units is fine.
 #include <sctl/experimental/quad_element.hpp>
@@ -36,10 +37,17 @@ namespace bie {
 
     static Ker make_kernel(double* ctx) {
       Ker ker;
-      ker.SetCtxPtr(ctx);
+      if constexpr (kernel_uses_ctx<Ker>()) ker.SetCtxPtr(ctx); // others: none, or the FMM is not used
       return ker;
     }
-    BIOp(double ctx_, bool trg_dot_prod) : ctx(ctx_), op(make_kernel(&ctx), trg_dot_prod) {}
+    BIOp(double ctx_, bool trg_dot_prod) : ctx(ctx_), op(make_kernel(&ctx), trg_dot_prod) {
+      if constexpr (FMMScheme<Ker>::supported) { // far field by PVFMM (when built with it) for 40000+ targets
+        using S = FMMScheme<Ker>;
+        const Ker ker = make_kernel(&ctx);
+        op.SetFMMKer(typename S::s2m(), typename S::s2m(), ker, typename S::m2m(), typename S::m2m(), typename S::m2t(),
+                     typename S::l2l(), typename S::l2t());
+      }
+    }
     BIOp(const BIOp&) = delete;
 
     void add(const QEL& elist, const std::string& name) override { op.AddElemList(elist, name); } // copies elist

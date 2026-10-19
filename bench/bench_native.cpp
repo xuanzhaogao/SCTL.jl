@@ -135,5 +135,39 @@ int main(int argc, char** argv) {
     op.Setup();
     report("bie_apply_3456", bench([&] { VecD U; op.ComputePotential(U, F); sink = sink + U[0]; }));
   }
+#ifdef SCTL_HAVE_PVFMM
+  { // FMM, with the translation kernels of csrc/fmm_schemes.hpp
+    const VecD Xs = load("fmm_xs"), Xt = load("fmm_xt"), F = load("fmm_f"), Fs = load("fmm_fs");
+    {
+      ParticleFMM<double, 3> fmm;
+      const Laplace3D_FxU L;
+      fmm.SetAccuracy(8);
+      fmm.SetKernels(L, L, L); fmm.AddSrc("src", L, L); fmm.AddTrg("trg", L, L); fmm.SetKernelS2T("src", "trg", L);
+      fmm.SetSrcCoord("src", Xs); fmm.SetTrgCoord("trg", Xt); fmm.SetSrcDensity("src", F);
+      report("fmm_laplace_1M_d8", bench([&] { VecD U; fmm.Eval(U, "trg"); sink = sink + U[0]; }));
+    }
+    {
+      ParticleFMM<double, 3> fmm;
+      const Stokes3D_FxU S; const Stokes3D_FSxU SS;
+      const VecD Xs2(3 * 200000, (Iterator<double>)Xs.begin(), false), Xt2(3 * 200000, (Iterator<double>)Xt.begin(), false);
+      fmm.SetAccuracy(6);
+      fmm.SetKernels(SS, SS, S); fmm.AddSrc("src", S, S); fmm.AddTrg("trg", SS, S); fmm.SetKernelS2T("src", "trg", S);
+      fmm.SetSrcCoord("src", Xs2); fmm.SetTrgCoord("trg", Xt2); fmm.SetSrcDensity("src", Fs);
+      report("fmm_stokes_200k_d6", bench([&] { VecD U; fmm.Eval(U, "trg"); sink = sink + U[0]; }));
+    }
+    {
+      const VecD coord = load("bie_coord"), Fb = load("bie_density"), Xtb = load("bie_trg");
+      QuadElemList<double> elist(12, coord);
+      const Laplace3D_DxU D; const Laplace3D_FxU L;
+      BoundaryIntegralOp<double, Laplace3D_DxU> op(D);
+      op.SetFMMKer(D, D, D, L, L, L, L, L);
+      op.SetAccuracy(1e-8);
+      op.AddElemList(elist);
+      op.SetTargetCoord(Xtb);
+      op.Setup();
+      report("bie_fmm_apply_50k", bench([&] { VecD U; op.ComputePotential(U, Fb); sink = sink + U[0]; }));
+    }
+  }
+#endif
   return 0;
 }

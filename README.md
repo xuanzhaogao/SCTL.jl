@@ -32,14 +32,18 @@ around 1.7 GB of RAM per compiler process). Build options are environment variab
 | `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL` | SCTL checkout |
 | `CXX` | `g++` | compiler |
 | `SCTL_JL_MARCH` | `-march=native` | e.g. `-march=x86-64-v3` for a library shared by machines with different CPUs |
+| `SCTL_JL_PVFMM` | `1` | `0` builds without the FMM; `PVFMM_ROOT` (default: the `deps/pvfmm` submodule) picks another PVFMM checkout |
+| `SCTL_JL_BLAS` | `1` | `0` builds without BLAS/LAPACK |
 | `SCTL_JL_CXXFLAGS` | | extra flags, e.g. `-DSCTL_HAVE_FFTW` |
 | `SCTL_JL_LDFLAGS` | | extra link flags, e.g. `-lfftw3` |
 
-By default no optional dependencies are used. SCTL falls back to its own FFT, GEMM and SVD. `SCTL.has_feature(:FFTW)`
-reports what was compiled in. `SCTL_JL_LIB=/path/libsctljl.so` points the package at another build; it is read when
+By default the library includes PVFMM (headers only, compiled without MPI) and BLAS/LAPACK. The BLAS/LAPACK come from
+the `OpenBLAS32_jll` package (an LP64 OpenBLAS), so no system libraries are needed. There is no FFTW by default; SCTL
+uses its own FFT. `SCTL.has_feature(:PVFMM)`, `(:BLAS)` and so on report what was compiled in. `SCTL_JL_LIB=/path/libsctljl.so` points the package at another build; it is read when
 the package is precompiled, so changing it later needs a recompile.
 
-Tests: `julia --project=. test/runtests.jl`. This is about 1700 tests and takes about 40 s.
+Tests: `julia --project=. test/runtests.jl`. This is about 1750 tests. The first run takes a few minutes, because it
+precomputes FMM operators; later runs take about 1 min.
 
 ## What is wrapped
 
@@ -54,9 +58,10 @@ Tests: `julia --project=. test/runtests.jl`. This is about 1700 tests and takes 
 | spherical harmonics | `grid2shc`, `shc2grid`, `shceval`, `shc2pole`, vector variants, `laplace_eval_sl/dl`, `stokes_eval_sl/dl/kl/kself`, `SHCArrange` | `SphericalHarmonics` |
 | trees | `PtTree{DIM}` (DIM = 1, 2, 3), `update_refinement!`, `add_particles!`, `add_particle_data!`, `get_particle_data`, `node_info`, `get_data`, `write_tree_vtk`, … | `Tree`, `PtTree`, `Morton` |
 | FFT | `FFTPlan(:r2c / :c2c / :c2c_inv / :c2r, dims; howmany)`, `execute[!]` | `FFT` |
+| fast multipole method | `ParticleFMM`, `set_sources!`, `set_density!`, `set_targets!`, `fmm_evaluate[!]`, `fmm_eval` | `ParticleFMM` with PVFMM (no MPI) |
 | OpenMP | `SCTL.get_num_threads`, `SCTL.set_num_threads` | |
 
-Not wrapped: MPI (`Comm`), `ParticleFMM`/PVFMM, the containers (`Vector`, `Matrix`, `Tensor`, `Vec`, memory
+Not wrapped: MPI (`Comm`), the containers (`Vector`, `Matrix`, `Tensor`, `Vec`, memory
 managers; use Julia arrays), `VTUData`, `Profile`, the legacy `ChebBasis`, the GPU tree.
 
 The [documentation](https://xuanzhaogao.github.io/SCTL.jl/dev/) has a manual page with a tutorial for each module, and
@@ -116,8 +121,10 @@ ones.
 - **Threads.** SCTL uses OpenMP; control it with `OMP_NUM_THREADS` or `SCTL.set_num_threads`. On load the package
   sets `OMP_WAIT_POLICY=PASSIVE` (unless you set it already), so idle OpenMP threads don't spin against Julia's own.
   Julia callbacks are only ever invoked on the calling thread.
-- **No FMM.** Without PVFMM, `BoundaryIntegralOp`'s far field is a direct O(N_nodes · N_targets) sum, and
-  periodicity is unavailable.
+- **FMM.** PVFMM (the `deps/pvfmm` submodule) is compiled in without MPI. `ParticleFMM` and the far field of
+  `BoundaryIntegralOp` use it for Laplace and Stokes kernels with 40000 or more targets. Helmholtz kernels use direct
+  sums, because PVFMM cannot pass them their wavenumber. The first evaluation for a kernel and accuracy precomputes
+  operators, which are cached in `SCTL.fmm_cache_dir()` (seconds for Laplace, minutes for Stokes).
 - **Supported kernels.** `BoundaryIntegralOp` supports Laplace FxU/DxU/FxdU/DxdU, Helmholtz FxU/DxU/FxdU and Stokes
   FxU/DxU/FxT (`bie_supported_kernels()`). `QuadElemList` orders must be 4, 8, 12, 16 or 20 for use in an operator.
   `AddElemList` copies the list, so set the quadrature scheme before adding it.

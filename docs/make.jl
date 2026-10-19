@@ -13,6 +13,7 @@ const PAGES = [
         "GMRES" => "man/gmres.md",
         "SDC ODE solver" => "man/sdc.md",
         "Kernel functions" => "man/kernels.md",
+        "Fast multipole method" => "man/fmm.md",
         "Boundary integral operators" => "man/bie.md",
         "Spherical harmonics" => "man/sph_harm.md",
         "Point trees" => "man/tree.md",

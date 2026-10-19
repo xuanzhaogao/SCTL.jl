@@ -77,6 +77,9 @@ SCTL parallelizes with OpenMP:
 
 - Set the number of threads with the environment variable `OMP_NUM_THREADS` before starting Julia, or at run time
   with [`SCTL.set_num_threads`](@ref). [`SCTL.get_num_threads`](@ref) reports the current value.
+- When it loads, SCTL.jl sets its own OpenBLAS (the `OpenBLAS32_jll` library, not Julia's BLAS) to one thread,
+  unless `OPENBLAS_NUM_THREADS` is set. SCTL calls BLAS inside its OpenMP loops, and a second thread pool there can
+  hang.
 - When it loads, SCTL.jl sets `OMP_WAIT_POLICY=PASSIVE` unless you have set it yourself. Otherwise idle OpenMP threads
   spin after each parallel region and compete with Julia's own threads. Benchmarks that call SCTL in a tight loop
   may run faster with `OMP_WAIT_POLICY=ACTIVE`.
@@ -102,12 +105,22 @@ SCTL's per-thread scratch memory, so keep callbacks free of task switches.
 
 ## Optional dependencies
 
-By default the library is built without BLAS, LAPACK or FFTW, and SCTL uses its own implementations.
-[`SCTL.has_feature`](@ref) reports what the build includes:
+By default the library includes:
+- **PVFMM**, compiled from its headers without MPI. It powers [`ParticleFMM`](@ref) and the far field of
+  [`BoundaryIntegralOp`](@ref).
+- **BLAS and LAPACK**, from the `OpenBLAS32_jll` package (an OpenBLAS with 32-bit integers, as SCTL expects). It is
+  separate from Julia's own BLAS, so the two do not interfere.
+
+FFTW is not included by default; SCTL uses its own FFT. MPI is never used. [`SCTL.has_feature`](@ref) reports what the
+build includes:
 
 ```@example conv
-(; FFTW = SCTL.has_feature(:FFTW), BLAS = SCTL.has_feature(:BLAS), MPI = SCTL.has_feature(:MPI))
+(; PVFMM = SCTL.has_feature(:PVFMM), BLAS = SCTL.has_feature(:BLAS), LAPACK = SCTL.has_feature(:LAPACK),
+   FFTW = SCTL.has_feature(:FFTW), MPI = SCTL.has_feature(:MPI))
 ```
+
+The FMM stores precomputed operators on disk, in [`SCTL.fmm_cache_dir`](@ref); see
+[Fast multipole method](@ref).
 
 ## Reference
 

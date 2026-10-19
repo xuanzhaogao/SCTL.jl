@@ -8,9 +8,14 @@ SCTL_ROOT=${1:-$HERE/../deps/SCTL}; shift || true
 THREADS=${@:-1 16}
 WORK=${BENCH_DIR:-$(mktemp -d)}
 mkdir -p "$WORK"
-${CXX:-g++} -std=c++17 -fopenmp -O3 ${SCTL_JL_MARCH:--march=native} -DNDEBUG -I"$SCTL_ROOT/include" \
-  "$HERE/bench_native.cpp" -o "$WORK/bench_native"
+# configuration of the shim build (PVFMM headers, OpenBLAS32 with LAPACK), so both sides run the same SCTL code
+CONFIG=$(sed 's/ | /\n/' "$HERE/../deps/usr/obj/config.txt")
+CXXFLAGS_SHIM=$(echo "$CONFIG" | head -1 | cut -d' ' -f2- | sed 's/-fvisibility[^ ]*//g; s/-fPIC//')
+LDFLAGS_SHIM=$(echo "$CONFIG" | tail -1 | sed 's/-shared//')
+${CXX:-g++} $CXXFLAGS_SHIM -I"$SCTL_ROOT/include" "$HERE/bench_native.cpp" -o "$WORK/bench_native" $LDFLAGS_SHIM
+export PVFMM_DIR=${PVFMM_DIR:-$(${JULIA:-julia} --project="$HERE/.." -e 'using SCTL; print(SCTL.fmm_cache_dir())')}
 export OMP_WAIT_POLICY=PASSIVE   # what SCTL.jl sets on load; use it for both
+export OPENBLAS_NUM_THREADS=1    # likewise (SCTL calls BLAS inside OpenMP loops)
 for t in $THREADS; do
   export OMP_NUM_THREADS=$t
   ${JULIA:-julia} --project="$HERE/.." "$HERE/bench_julia.jl" "$WORK/data" > "$WORK/julia_$t.txt"

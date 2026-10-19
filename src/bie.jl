@@ -282,9 +282,11 @@ Layout: the input density has `src_dim(kernel)` values per surface node (nodes o
 lexicographic order of their names); the output has `trg_dim(kernel)` (or `trg_dim/3`) values per target. Targets
 are the surface nodes unless set with [`set_target_coord!`](@ref).
 
-This build has no PVFMM: the far field is a direct ``O(N_{nodes} N_{targets})`` sum (OpenMP-parallel), so it is
-meant for moderate sizes. Periodicity needs PVFMM and is not available. The C++ object is freed by a finalizer, or
-explicitly with `close(op)`.
+Far field: with 40000 or more targets (surface nodes plus set targets), the Laplace and Stokes kernels use the fast
+multipole method (PVFMM, see [`ParticleFMM`](@ref)), so an application costs ``O(N_{nodes} + N_{targets})``.
+Helmholtz kernels, and smaller problems, use a direct ``O(N_{nodes} N_{targets})`` sum (OpenMP-parallel); so does every
+kernel when the library is built without PVFMM ([`SCTL.has_feature`](@ref)`(:PVFMM)`). Periodicity is not exposed.
+The C++ object is freed by a finalizer, or explicitly with `close(op)`.
 """
 mutable struct BoundaryIntegralOp{K<:AbstractKernel}
     ptr::Ptr{Cvoid}

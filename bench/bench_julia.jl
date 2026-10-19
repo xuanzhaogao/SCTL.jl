@@ -68,6 +68,13 @@ end
 bie_F = randn(rng, order^2 * nelem)
 save("bie_coord", bie_coord); save("bie_density", bie_F)
 
+fmm_xs, fmm_xt, fmm_f = rand(rng, 3, 1_000_000), rand(rng, 3, 1_000_000), randn(rng, 1, 1_000_000)
+save("fmm_xs", fmm_xs); save("fmm_xt", fmm_xt); save("fmm_f", fmm_f)
+fmm_fs = randn(rng, 3, 200_000)
+save("fmm_fs", fmm_fs)
+bie_trg = let d = randn(rng, 3, 50_000); d ./ sqrt.(sum(abs2, d; dims = 1)) .* 0.5 end   # inside the sphere
+save("bie_trg", bie_trg)
+
 # ---- benchmarks ----
 report("legquad_16", bench(() -> (sink[] += legquad(16)[1][1])))
 report("lagrange_32x1000", bench(() -> (sink[] += lagrange_interp_matrix(lag_src, lag_trg)[1])))
@@ -121,3 +128,21 @@ op = BoundaryIntegralOp(Laplace3D_DxU(); accuracy=1e-8)
 add_elem_list!(op, elist)
 setup!(op)
 report("bie_apply_3456", bench(() -> (sink[] += compute_potential(op, bie_F)[1])))
+
+if SCTL.has_feature(:PVFMM)
+    # FMM on fixed points (the repeated-application case); the first evaluation (tree, operator cache) is the warm-up
+    fmm = ParticleFMM(Laplace3D_FxU(); digits = 8)
+    set_sources!(fmm, fmm_xs); set_targets!(fmm, fmm_xt); set_density!(fmm, fmm_f)
+    U_fmm = Matrix{Float64}(undef, 1, 1_000_000)
+    report("fmm_laplace_1M_d8", bench(() -> (sink[] += fmm_evaluate!(U_fmm, fmm)[1])))
+    fmm = ParticleFMM(Stokes3D_FxU(); digits = 6)
+    set_sources!(fmm, fmm_xs[:, 1:200_000]); set_targets!(fmm, fmm_xt[:, 1:200_000]); set_density!(fmm, fmm_fs)
+    U_fmm = Matrix{Float64}(undef, 3, 200_000)
+    report("fmm_stokes_200k_d6", bench(() -> (sink[] += fmm_evaluate!(U_fmm, fmm)[1])))
+    # boundary integral operator with 50000 off-surface targets: far field by the FMM
+    op = BoundaryIntegralOp(Laplace3D_DxU(); accuracy = 1e-8)
+    add_elem_list!(op, elist)
+    set_target_coord!(op, bie_trg)
+    setup!(op)
+    report("bie_fmm_apply_50k", bench(() -> (sink[] += compute_potential(op, bie_F)[1])))
+end

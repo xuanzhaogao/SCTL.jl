@@ -49,5 +49,8 @@ SCTLJL_EXPORT int sctljl_have(const char* feature) {
 #ifdef SCTL_HAVE_MPI
   if (f == "MPI") return 1;
 #endif
+#ifdef SCTL_HAVE_PVFMM
+  if (f == "PVFMM") return 1;
+#endif
   return 0;
 }

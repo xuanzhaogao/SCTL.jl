@@ -11,7 +11,8 @@ nodes, and ``x`` is a target either on ``\Gamma`` or off it. If ``x`` lies on or
 singular or nearly singular, so plain quadrature fails. SCTL's `BoundaryIntegralOp<Real,Kernel>` handles this by
 combining three parts:
 
-- a smooth quadrature at the nodes for the far field (a direct sum here; PVFMM is not linked);
+- a smooth quadrature at the nodes for the far field, summed by the [Fast multipole method](@ref) for Laplace and
+  Stokes kernels with 40000 or more targets, and directly otherwise;
 - precomputed singular and near-singular correction matrices, built by the element list for targets close to each
   element;
 - a principal-value treatment of on-surface targets.
@@ -215,10 +216,11 @@ length, which correspond to SCTL's `Dim(0)` and `Dim(1)`.
 
 ## Pitfalls and limitations
 
-- **No FMM.** This build does not link PVFMM, so the far field is a direct
-  ``O(N_\text{nodes} N_\text{targets})`` sum (OpenMP-parallel). Each application of an operator with the nodes as
-  targets costs ``O(N^2)``. This is fine for a few ``10^4`` nodes. Periodicity also needs PVFMM and is not
-  available.
+- **Far-field cost.** Laplace and Stokes kernels use PVFMM for the far field once there are 40000 or more targets
+  (surface nodes plus set targets). An application then costs ``O(N_\text{nodes} + N_\text{targets})``. The first
+  application for a kernel and accuracy also precomputes FMM operators, cached on disk; see
+  [Fast multipole method](@ref). Helmholtz kernels always use a direct ``O(N_\text{nodes} N_\text{targets})`` sum,
+  because PVFMM does not pass them their wavenumber. That is fine for a few ``10^4`` nodes. Periodicity is not exposed.
 - **Element order.** Elements must have order 4, 8, 12, 16 or 20 to be added to an operator. These are the orders
   that SCTL's singular quadratures are compiled for. [`QuadElemList`](@ref) itself accepts any order, e.g. for
   geometry or visualization.

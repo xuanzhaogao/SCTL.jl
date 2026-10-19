@@ -1,6 +1,10 @@
 # Builds libsctljl.so, the C-ABI shim over the header-only SCTL library (MPI-free).
 #
-#   make SCTL_ROOT=/path/to/SCTL [CXX=g++] [EXTRA_CXXFLAGS=...] [EXTRA_LDFLAGS=...] [BUILDDIR=...] [SRCS=...]
+#   make SCTL_ROOT=/path/to/SCTL [PVFMM_ROOT=/path/to/pvfmm] [BLAS_LIBDIR=/dir/with/libopenblas.so]
+#        [CXX=g++] [EXTRA_CXXFLAGS=...] [EXTRA_LDFLAGS=...] [BUILDDIR=...] [SRCS=...]
+#
+# PVFMM_ROOT (a PVFMM checkout; only its headers are used, compiled without MPI) enables the FMM in ParticleFMM and
+# BoundaryIntegralOp. BLAS_LIBDIR (an LP64 OpenBLAS with LAPACK, e.g. from OpenBLAS32_jll) enables BLAS and LAPACK.
 #
 # Normally driven by deps/build.jl (`Pkg.build("SCTL")`).
 
@@ -14,8 +18,21 @@ CXXFLAGS += -I$(SCTL_ROOT)/include -I.
 # AVX-512-FP16 of -march=native (Sapphire Rapids), which binutils before 2.38 can't assemble
 # (only where the compiler knows the flag; GCC < 12 does not)
 CXXFLAGS += $(shell $(CXX) -mno-avx512fp16 -E -x c++ /dev/null >/dev/null 2>&1 && echo -mno-avx512fp16)
+LDFLAGS = -shared -fopenmp
+ifneq ($(PVFMM_ROOT),)
+CXXFLAGS += -DSCTL_HAVE_PVFMM -I$(PVFMM_ROOT)/include
+endif
+ifneq ($(BLAS_LIBDIR),)
+CXXFLAGS += -DSCTL_HAVE_BLAS -DSCTL_HAVE_LAPACK
+LDFLAGS += -L$(BLAS_LIBDIR) -lopenblas -Wl,-rpath,$(BLAS_LIBDIR)
+endif
 CXXFLAGS += $(EXTRA_CXXFLAGS)
-LDFLAGS = -shared -fopenmp $(EXTRA_LDFLAGS)
+LDFLAGS += $(EXTRA_LDFLAGS)
+
+# rebuild everything when the configuration changes
+CONFIG = $(BUILDDIR)/obj/config.txt
+CONFIG_NOW = $(CXX) $(CXXFLAGS) | $(LDFLAGS)
+$(shell mkdir -p $(BUILDDIR)/obj; [ "$$(cat $(CONFIG) 2>/dev/null)" = '$(CONFIG_NOW)' ] || echo '$(CONFIG_NOW)' > $(CONFIG))
 
 SRCS ?= $(wildcard capi_*.cpp)
 OBJDIR = $(BUILDDIR)/obj
@@ -24,11 +41,11 @@ LIB = $(BUILDDIR)/lib/libsctljl.so
 
 all: $(LIB)
 
-$(LIB): $(OBJS)
+$(LIB): $(OBJS) $(CONFIG)
 	@mkdir -p $(dir $@)
 	$(CXX) $(OBJS) $(LDFLAGS) -o $@.tmp && mv $@.tmp $@
 
-$(OBJDIR)/%.o: %.cpp $(wildcard *.hpp)
+$(OBJDIR)/%.o: %.cpp $(wildcard *.hpp) $(CONFIG)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

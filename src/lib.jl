@@ -156,7 +156,8 @@ set_num_threads(n::Integer) = ccall((:sctljl_set_num_threads, libsctljl), Cvoid,
 """
     SCTL.has_feature(name)
 
-Whether the compiled library has an optional dependency enabled; `name` is one of `:BLAS`, `:LAPACK`, `:FFTW`, `:MPI`.
+Whether the compiled library has an optional dependency enabled; `name` is one of `:PVFMM`, `:BLAS`, `:LAPACK`, `:FFTW`,
+`:MPI`.
 """
 has_feature(name) = ccall((:sctljl_have, libsctljl), Cint, (Cstring,), string(name)) != 0
 

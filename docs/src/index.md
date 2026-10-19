@@ -36,6 +36,8 @@ These environment variables are read by `Pkg.build`:
 | `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL` | the SCTL checkout to compile against |
 | `CXX` | `g++` | C++ compiler |
 | `SCTL_JL_MARCH` | `-march=native` | target CPU, e.g. `-march=x86-64-v3` when one build serves different machines |
+| `SCTL_JL_PVFMM` | `1` | `0` builds without the FMM (the `deps/pvfmm` submodule); `PVFMM_ROOT` picks another checkout |
+| `SCTL_JL_BLAS` | `1` | `0` builds without BLAS/LAPACK (from the `OpenBLAS32_jll` package) |
 | `SCTL_JL_CXXFLAGS` | | extra flags, e.g. `-DSCTL_HAVE_FFTW` |
 | `SCTL_JL_LDFLAGS` | | extra link flags, e.g. `-lfftw3` |
 
@@ -66,14 +68,14 @@ U ≈ [sum(1 / (4π * norm(Xt[:, t] - Xs[:, s])) for s in 1:1000) for t in 1:2]'
 | `GMRES`, `KrylovPrecond` | [`gmres`](@ref), [`KrylovPrecond`](@ref) | [GMRES](@ref) |
 | `SDC` | [`SDC`](@ref), [`sdc_step`](@ref), [`sdc_solve`](@ref) | [SDC ODE solver](@ref) |
 | `kernel_functions.hpp`, `GenericKernel` | [`Laplace3D_FxU`](@ref), …, [`kernel_eval`](@ref), [`kernel_matrix`](@ref) | [Kernel functions](@ref) |
+| `ParticleFMM` (PVFMM, without MPI) | [`ParticleFMM`](@ref), [`fmm_eval`](@ref) | [Fast multipole method](@ref) |
 | `BoundaryIntegralOp`, `QuadElemList` | [`BoundaryIntegralOp`](@ref), [`QuadElemList`](@ref) | [Boundary integral operators](@ref) |
 | `SphericalHarmonics` | [`grid2shc`](@ref), [`shc2grid`](@ref), [`shceval`](@ref), … | [Spherical harmonics](@ref) |
 | `Tree`, `PtTree`, `Morton` | [`PtTree`](@ref), [`update_refinement!`](@ref), [`node_info`](@ref), … | [Point trees](@ref) |
 | `FFT` | [`FFTPlan`](@ref), [`execute`](@ref) | [FFT](@ref) |
 
 These are not wrapped:
-- MPI (`Comm`) and the PVFMM-backed `ParticleFMM`. Without PVFMM, the far field of a `BoundaryIntegralOp` is a
-  direct sum.
+- MPI (`Comm`). PVFMM is compiled in without MPI and runs in the Julia process.
 - SCTL's containers (`Vector`, `Matrix`, `Tensor`, `Vec`) and memory managers; Julia arrays take their place.
 - `VTUData`, `Profile`, the legacy `ChebBasis`, and the experimental GPU tree.
 
