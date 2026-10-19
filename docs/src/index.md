@@ -32,7 +32,7 @@ Pkg.build("SCTL")      # compiles the C++ shim into SCTL.jl/deps/usr/lib/libsctl
 These environment variables are read by `Pkg.build`:
 
 | variable | default | purpose |
-|:-|:-|:-|
+|:--|:--|:--|
 | `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL` | the SCTL checkout to compile against |
 | `CXX` | `g++` | C++ compiler |
 | `SCTL_JL_MARCH` | `-march=native` | target CPU, e.g. `-march=x86-64-v3` when one build serves different machines |
@@ -61,7 +61,7 @@ U ≈ [sum(1 / (4π * norm(Xt[:, t] - Xs[:, s])) for s in 1:1000) for t in 1:2]'
 ## What is wrapped
 
 | SCTL component | Julia API | manual page |
-|:-|:-|:-|
+|:--|:--|:--|
 | `ChebQuadRule`, `LegQuadRule`, `InterpQuadRule`, `LagrangeInterp` | [`legquad`](@ref), [`interp_quad_rule`](@ref), [`lagrange_interp_matrix`](@ref), … | [Quadrature and interpolation](@ref) |
 | `GMRES`, `KrylovPrecond` | [`gmres`](@ref), [`KrylovPrecond`](@ref) | [GMRES](@ref) |
 | `SDC` | [`SDC`](@ref), [`sdc_step`](@ref), [`sdc_solve`](@ref) | [SDC ODE solver](@ref) |

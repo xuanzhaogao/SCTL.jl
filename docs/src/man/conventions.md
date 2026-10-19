@@ -12,7 +12,7 @@ SCTL stores data in flat C++ arrays in row-major order. SCTL.jl passes Julia arr
 so each function documents the Julia shape whose column-major memory is exactly SCTL's layout:
 
 | data | SCTL (C++) | Julia |
-|:-|:-|:-|
+|:--|:--|:--|
 | points in ``d`` dimensions | `{x₁, y₁, z₁, x₂, y₂, z₂, …}` (array of structs) | `d × N` matrix (a flat vector of length `d*N` also works) |
 | per-point data with `dof` components | `{f₁¹, …, f₁ᵈᵒᶠ, f₂¹, …}` | `dof × N` matrix |
 | row-major matrix ``M`` of size ``m × n`` | `M[i][j]` at `i*n + j` | the same memory read as an ``n × m`` matrix, i.e. ``M^T`` |

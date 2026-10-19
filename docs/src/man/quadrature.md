@@ -136,7 +136,7 @@ maximum(abs, D .- [cos.(x) -sin.(x) exp.(x)])
 ## Data layouts
 
 | function | input | output |
-|:-|:-|:-|
+|:--|:--|:--|
 | `legquad(n)`, `chebquad(n)` | | nodes `x::Vector` (increasing, in ``(0,1)``), weights `w::Vector` |
 | `legendre_poly(x, n)` | points in ``[-1,1]`` | `(P, dP)`, both like `x` |
 | `interp_quad_rule(M, nodes, weights)` | `M`: `nnodes × nfuncs`, `M[i,j] = φⱼ(nodes[i])` | `(x, w, cond)` |

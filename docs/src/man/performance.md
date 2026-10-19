@@ -14,7 +14,7 @@ exclusive nodes of Flatiron's Rusty cluster:
 Each entry is the time ratio SCTL.jl / C++:
 
 | benchmark | genoa, 1 thread | genoa, 96 threads | icelake, 1 thread | icelake, 64 threads |
-|:-|:-|:-|:-|:-|
+|:--|:--|:--|:--|:--|
 | Laplace direct sum, 20k × 20k | 1.000 | 0.98 | 1.000 | 1.02 |
 | Stokes direct sum, 10k × 10k | 1.000 | 0.99 | 1.000 | 1.44 (noise) |
 | `kernel_matrix!`, 2000 × 2000 (reused buffer) | 1.00 | 0.97 | 1.00 | 1.01 |
