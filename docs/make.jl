@@ -15,6 +15,7 @@ const PAGES = [
         "Kernel functions" => "man/kernels.md",
         "Fast multipole method" => "man/fmm.md",
         "Boundary integral operators" => "man/bie.md",
+        "Near-field pieces" => "man/bie_pieces.md",
         "Spherical harmonics" => "man/sph_harm.md",
         "Point trees" => "man/tree.md",
         "FFT" => "man/fft.md",

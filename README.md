@@ -61,6 +61,7 @@ precomputes FMM operators; later runs take about 1 min.
 | ODE solver | `SDC`, `sdc_step`, `sdc_solve`, `sdc_nodes`, `order` | `SDC` (spectral deferred correction) |
 | kernels | `Laplace3D_FxU`, `Stokes3D_DxU`, `Helmholtz3D_FxU(k)`, … (16 kernels), `kernel_matrix`, `kernel_eval[!]`, `src_dim`, `trg_dim`, … | `kernel_functions.hpp`, `GenericKernel` |
 | boundary integrals | `QuadElemList`, `BoundaryIntegralOp`, `add_elem_list!`, `set_target_coord!`, `compute_potential[!]`, … | `BoundaryIntegralOp`, `QuadElemList` (experimental) |
+| near-field pieces | `far_field_nodes`, `near_list`, `ElemQuadrature`, `near_blocks`, `node_rule_blocks`, `assemble_near_correction`, `near_correction` | the steps of `BoundaryIntegralOp`'s near-field setup (`BuildNearList`, `QuadElemList::NearInterac`/`SelfInterac`) |
 | spherical harmonics | `grid2shc`, `shc2grid`, `shceval`, `shc2pole`, vector variants, `laplace_eval_sl/dl`, `stokes_eval_sl/dl/kl/kself`, `SHCArrange` | `SphericalHarmonics` |
 | trees | `PtTree{DIM}` (DIM = 1, 2, 3), `update_refinement!`, `add_particles!`, `add_particle_data!`, `get_particle_data`, `node_info`, `get_data`, `write_tree_vtk`, … | `Tree`, `PtTree`, `Morton` |
 | FFT | `FFTPlan(:r2c / :c2c / :c2c_inv / :c2r, dims; howmany)`, `execute[!]` | `FFT` |

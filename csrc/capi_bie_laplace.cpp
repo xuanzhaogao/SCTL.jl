@@ -13,5 +13,13 @@ namespace bie {
     }
   }
 
+  QuadBase* new_quad_laplace_grad(int id, double ctx) {
+    switch (id) {
+      case 2:  return new Quad<sctl::Laplace3D_FxdU>(ctx);
+      case 4:  return new Quad<sctl::Laplace3D_DxdU>(ctx);
+      default:  return nullptr;
+    }
+  }
+
 } // namespace bie
 } // namespace sctljl

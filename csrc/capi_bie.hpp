@@ -65,12 +65,44 @@ namespace bie {
     void inv_sqrt_scaling(VecD& U) const override { op.Dim(0); op.InvSqrtScaling(U); }
   };
 
-  // Factories, one per translation unit: return a new op for kernel id `id` (ids as in capi_kernels.cpp), or
-  // nullptr if that translation unit does not instantiate this kernel.
+  // The singular and near-singular quadratures of a QuadElemList for one kernel, without an operator: the pieces of
+  // BoundaryIntegralOp's near-field setup (capi_bie.cpp, "near-field pieces").
+  struct QuadBase {
+    virtual ~QuadBase() {}
+    virtual int src_dim() const = 0;
+    virtual int trg_dim() const = 0;
+    // M: (nnode*SrcDim) x (Ntrg*TrgDim_out) from element e to the targets Xt (with normals Xn for trg_dot_prod)
+    virtual void near(sctl::Matrix<double>& M, const QEL& el, Long e, const VecD& Xt, const VecD& Xn, double tol) const = 0;
+    // M_lst[e]: (nnode*SrcDim) x (nnode*TrgDim_out) from element e to its own nodes
+    virtual void self(sctl::Vector<sctl::Matrix<double>>& M_lst, const QEL& el, double tol, bool trg_dot_prod) const = 0;
+  };
+
+  template <class Ker> struct Quad final : QuadBase {
+    double ctx; // before `ker`, which points to it
+    Ker ker;
+    explicit Quad(double ctx_) : ctx(ctx_), ker(BIOp<Ker>::make_kernel(&ctx)) {}
+    Quad(const Quad&) = delete;
+    int src_dim() const override { return Ker::SrcDim(); }
+    int trg_dim() const override { return Ker::TrgDim(); }
+    void near(sctl::Matrix<double>& M, const QEL& el, Long e, const VecD& Xt, const VecD& Xn, double tol) const override {
+      QEL::NearInterac<Ker>(M, Xt, Xn, ker, tol, e, &el);
+    }
+    void self(sctl::Vector<sctl::Matrix<double>>& M_lst, const QEL& el, double tol, bool trg_dot_prod) const override {
+      if (M_lst.Dim() != el.Size()) M_lst.ReInit(el.Size()); // SCTL sizes each matrix, not the list
+      QEL::SelfInterac<Ker>(M_lst, ker, tol, trg_dot_prod, &el);
+    }
+  };
+
+  // Factories, one per translation unit: return a new op (quadrature) for kernel id `id` (ids as in
+  // capi_kernels.cpp), or nullptr if that translation unit does not instantiate this kernel.
   BIOpBase* new_op_laplace_sl(int id, double ctx, bool trg_dot_prod);   // capi_bie.cpp
   BIOpBase* new_op_laplace_grad(int id, double ctx, bool trg_dot_prod); // capi_bie_laplace.cpp
   BIOpBase* new_op_stokes(int id, double ctx, bool trg_dot_prod);       // capi_bie_stokes.cpp
   BIOpBase* new_op_helmholtz(int id, double ctx, bool trg_dot_prod);    // capi_bie_helmholtz.cpp
+  QuadBase* new_quad_laplace_sl(int id, double ctx);
+  QuadBase* new_quad_laplace_grad(int id, double ctx);
+  QuadBase* new_quad_stokes(int id, double ctx);
+  QuadBase* new_quad_helmholtz(int id, double ctx);
 
 } // namespace bie
 } // namespace sctljl

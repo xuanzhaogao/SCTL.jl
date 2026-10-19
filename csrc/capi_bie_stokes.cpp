@@ -14,5 +14,14 @@ namespace bie {
     }
   }
 
+  QuadBase* new_quad_stokes(int id, double ctx) {
+    switch (id) {
+      case 11: return new Quad<sctl::Stokes3D_FxU>(ctx);
+      case 12: return new Quad<sctl::Stokes3D_DxU>(ctx);
+      case 13: return new Quad<sctl::Stokes3D_FxT>(ctx);
+      default:  return nullptr;
+    }
+  }
+
 } // namespace bie
 } // namespace sctljl
