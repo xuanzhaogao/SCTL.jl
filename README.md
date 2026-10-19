@@ -129,3 +129,8 @@ ones.
   process. The Julia side validates arguments up front so those checks don't fire.
 - **Workaround for an SCTL bug.** SCTL leaves the unused coefficients of the `SHC_ALL` layout uninitialized; the shim
   zeroes them.
+
+## License
+
+SCTL.jl is released under the [MIT License](LICENSE). SCTL itself, included as the `deps/SCTL` submodule, is
+distributed under the Apache License 2.0.
