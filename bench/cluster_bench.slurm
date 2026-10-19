@@ -27,8 +27,9 @@ NCORES=$(nproc)
 
 # node-local copy of the package, built for this CPU (keeps the workstation build in deps/usr untouched)
 rsync -a --exclude deps/usr --exclude bench/results "$SRC/" "$WORK/SCTL.jl/"
-make -C "$WORK/SCTL.jl/csrc" -j"$NCORES" SCTL_ROOT="$SCTL_ROOT" BUILDDIR="$WORK/SCTL.jl/deps/usr" > "$OUT/build.log" 2>&1
-"$JULIA" --project="$WORK/SCTL.jl" -e 'using SCTL' >> "$OUT/build.log" 2>&1   # precompile once
+# default configuration (PVFMM, OpenBLAS32), as users get it from Pkg.build
+SCTL_ROOT="$SCTL_ROOT" "$JULIA" --project="$WORK/SCTL.jl" -e 'using Pkg; Pkg.instantiate(); Pkg.build()' > "$OUT/build.log" 2>&1
+"$JULIA" --project="$WORK/SCTL.jl" -e 'using SCTL; @show SCTL.has_feature(:PVFMM) SCTL.has_feature(:BLAS)' >> "$OUT/build.log" 2>&1
 
 BENCH_DIR=$WORK/bench "$WORK/SCTL.jl/bench/run.sh" "$SCTL_ROOT" ${BENCH_THREADS:-1 16 $NCORES} | tee "$OUT/results.txt"
 cp "$WORK"/bench/*.txt "$OUT/"
