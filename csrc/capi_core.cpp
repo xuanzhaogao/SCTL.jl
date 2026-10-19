@@ -43,6 +43,9 @@ SCTLJL_EXPORT int sctljl_have(const char* feature) {
 #ifdef SCTL_HAVE_LAPACK
   if (f == "LAPACK") return 1;
 #endif
+#ifdef SCTLJL_BLAS_LBT
+  if (f == "BLAS_LBT") return 1;
+#endif
 #ifdef SCTL_HAVE_FFTW
   if (f == "FFTW") return 1;
 #endif

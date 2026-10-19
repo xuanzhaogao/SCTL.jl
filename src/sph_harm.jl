@@ -153,7 +153,7 @@ function grid2shc(X::AbstractArray{<:Real}, Nt::Integer, Np::Integer, p::Integer
     x = _flat(X)
     nf = _nblocks(length(x), Nt * Np, "grid values X (Nt*Np per field)")
     S = Vector{Float64}(undef, nf * shc_length(p, arrange))
-    _check(ccall((:sctljl_sph_grid2shc, libsctljl), Cint,
+    @serial_blas _check(ccall((:sctljl_sph_grid2shc, libsctljl), Cint,
                  (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Int64, Int64, Int64, Cint),
                  S, length(S), x, length(x), Nt, Np, p, Cint(arrange)))
     return S
@@ -178,7 +178,7 @@ function shc2grid(S::AbstractArray{<:Real}, p::Integer, Nt::Integer, Np::Integer
     X = Vector{Float64}(undef, n)
     Xt = derivatives ? Vector{Float64}(undef, n) : nothing
     Xp = derivatives ? Vector{Float64}(undef, n) : nothing
-    _check(ccall((:sctljl_sph_shc2grid, libsctljl), Cint,
+    @serial_blas _check(ccall((:sctljl_sph_shc2grid, libsctljl), Cint,
                  (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Int64, Ptr{Float64}, Int64, Cint, Int64, Int64, Int64),
                  X, something(Xt, C_NULL), something(Xp, C_NULL), n, s, length(s), Cint(arrange), p, Nt, Np))
     return derivatives ? (X, Xt, Xp) : X
@@ -197,7 +197,7 @@ function shceval(S::AbstractArray{<:Real}, p::Integer, theta_phi::AbstractArray{
     nf = _nblocks(length(s), shc_length(p, arrange), "coefficients S")
     tp = _points(theta_phi, 2, "theta_phi")
     X = Vector{Float64}(undef, nf * (length(tp) ÷ 2))
-    _check(ccall((:sctljl_sph_shceval, libsctljl), Cint,
+    @serial_blas _check(ccall((:sctljl_sph_shceval, libsctljl), Cint,
                  (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Cint, Int64, Ptr{Float64}, Int64),
                  X, length(X), s, length(s), Cint(arrange), p, tp, length(tp)))
     return X
@@ -214,7 +214,7 @@ function shc2pole(S::AbstractArray{<:Real}, p::Integer; arrange::SHCArrange=SHC_
     s = _flat(S)
     nf = _nblocks(length(s), shc_length(p, arrange), "coefficients S")
     P = Vector{Float64}(undef, 2nf)
-    _check(ccall((:sctljl_sph_shc2pole, libsctljl), Cint, (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Cint, Int64),
+    @serial_blas _check(ccall((:sctljl_sph_shc2pole, libsctljl), Cint, (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Cint, Int64),
                  P, length(P), s, length(s), Cint(arrange), p))
     return P
 end
@@ -249,7 +249,7 @@ function grid2vecshc(X::AbstractArray{<:Real}, Nt::Integer, Np::Integer, p::Inte
     x = _flat(X)
     nv = _nblocks(length(x), 3 * Nt * Np, "grid values X (3*Nt*Np per vector field)")
     S = Vector{Float64}(undef, 3 * nv * shc_length(p, arrange))
-    _check(ccall((:sctljl_sph_grid2vecshc, libsctljl), Cint,
+    @serial_blas _check(ccall((:sctljl_sph_grid2vecshc, libsctljl), Cint,
                  (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Int64, Int64, Int64, Cint),
                  S, length(S), x, length(x), Nt, Np, p, Cint(arrange)))
     return S
@@ -268,7 +268,7 @@ function vecshc2grid(S::AbstractArray{<:Real}, p::Integer, Nt::Integer, Np::Inte
     s = _flat(S)
     nv = _nblocks(length(s), 3 * shc_length(p, arrange), "vector coefficients S")
     X = Vector{Float64}(undef, 3 * nv * Nt * Np)
-    _check(ccall((:sctljl_sph_vecshc2grid, libsctljl), Cint,
+    @serial_blas _check(ccall((:sctljl_sph_vecshc2grid, libsctljl), Cint,
                  (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Cint, Int64, Int64, Int64),
                  X, length(X), s, length(s), Cint(arrange), p, Nt, Np))
     return X
@@ -286,7 +286,7 @@ function vecshceval(S::AbstractArray{<:Real}, p::Integer, theta_phi::AbstractArr
     nv = _nblocks(length(s), 3 * shc_length(p, arrange), "vector coefficients S")
     tp = _points(theta_phi, 2, "theta_phi")
     X = Vector{Float64}(undef, 3 * nv * (length(tp) ÷ 2))
-    _check(ccall((:sctljl_sph_vecshceval, libsctljl), Cint,
+    @serial_blas _check(ccall((:sctljl_sph_vecshceval, libsctljl), Cint,
                  (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Cint, Int64, Ptr{Float64}, Int64),
                  X, length(X), s, length(s), Cint(arrange), p, tp, length(tp)))
     return X
@@ -301,7 +301,7 @@ function _laplace_eval(S, p, coord, interior, arrange, kind)
     nf = _nblocks(length(s), shc_length(p, arrange), "coefficients S")
     x = _points(coord, 3, "coord")
     U = Vector{Float64}(undef, nf * (length(x) ÷ 3))
-    _check(ccall((:sctljl_sph_laplace_eval, libsctljl), Cint,
+    @serial_blas _check(ccall((:sctljl_sph_laplace_eval, libsctljl), Cint,
                  (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Cint, Int64, Ptr{Float64}, Int64, Cint, Cint),
                  U, length(U), s, length(s), Cint(arrange), p, x, length(x), interior, kind))
     return U
@@ -342,7 +342,7 @@ function _stokes_eval(S, p, coord, normals, interior, arrange, kind)
     n = normals === nothing ? nothing : _points(normals, 3, "normals")
     n === nothing || length(n) == length(x) || throw(DimensionMismatch("need one normal per target point"))
     U = Vector{Float64}(undef, 3 * nv * (length(x) ÷ 3))
-    _check(ccall((:sctljl_sph_stokes_eval, libsctljl), Cint,
+    @serial_blas _check(ccall((:sctljl_sph_stokes_eval, libsctljl), Cint,
                  (Ptr{Float64}, Int64, Ptr{Float64}, Int64, Cint, Int64, Ptr{Float64}, Int64, Ptr{Float64}, Cint, Cint),
                  U, length(U), s, length(s), Cint(arrange), p, x, length(x), something(n, C_NULL), interior, kind))
     return U

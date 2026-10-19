@@ -71,7 +71,7 @@ function interp_quad_rule(M::AbstractMatrix{<:Real}, nodes::AbstractVector{<:Rea
     nds, wts = _f64(nodes), _f64(weights)
     cond = Ref(0.0)
     _withvecs(Float64, Float64) do hx, hw
-        _check(ccall((:sctljl_interpquad_build, libsctljl), Cint,
+        @serial_blas _check(ccall((:sctljl_interpquad_build, libsctljl), Cint,
                      (Ptr{Cvoid}, Ptr{Cvoid}, Ref{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Int64, Int64,
                       Float64, Int64, Float64, Float64, Cint, Cint),
                      hx, hw, cond, Mt, nds, wts, size(M, 1), size(M, 2),
@@ -102,7 +102,7 @@ function interp_quad_rules(M::AbstractMatrix{<:Real}, nodes::AbstractVector{<:Re
     try
         cond = Vector{Float64}(undef, nrules)
         px, pw = [h.ptr for h in hx], [h.ptr for h in hw]
-        _check(ccall((:sctljl_interpquad_build_multi, libsctljl), Cint,
+        @serial_blas _check(ccall((:sctljl_interpquad_build_multi, libsctljl), Cint,
                      (Ptr{Ptr{Cvoid}}, Ptr{Ptr{Cvoid}}, Ptr{Float64}, Int64, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
                       Int64, Int64, Ptr{Float64}, Int64, Ptr{Int64}, Int64, Float64, Float64, Cint, Cint),
                      px, pw, cond, nrules, Mt, nds, wts, size(M, 1), size(M, 2),
@@ -141,7 +141,7 @@ function interp_quad_rule(f, a::Real, b::Real; eps::Real=1e-16, order::Integer=0
     cond = Ref(0.0)
     _withvecs(Float64, Float64) do hx, hw
         GC.@preserve st begin
-            status = ccall((:sctljl_interpquad_build_fn, libsctljl), Cint,
+            status = @serial_blas ccall((:sctljl_interpquad_build_fn, libsctljl), Cint,
                            (Ptr{Cvoid}, Ptr{Cvoid}, Ref{Float64}, Ptr{Cvoid}, Ptr{Cvoid},
                             Float64, Float64, Float64, Int64, Float64, Float64, Cint, Cint),
                            hx, hw, cond, cfn, pointer_from_objref(st),

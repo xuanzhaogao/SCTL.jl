@@ -5,6 +5,11 @@
 #include <sctl/experimental/quad_element.cpp>
 
 #include <cstdio>
+#include <cstdlib>
+#ifdef SCTLJL_BLAS_LBT
+#include <dlfcn.h>
+extern "C" void sctljl_set_blas(void*, void*, void*, void*);
+#endif
 #include <fstream>
 #include <functional>
 #include <string>
@@ -43,6 +48,15 @@ static void report(const char* name, double t) { std::printf("%-28s %.6e\n", nam
 static volatile double sink = 0;
 
 int main(int argc, char** argv) {
+#ifdef SCTLJL_BLAS_LBT
+  { // the shim's default BLAS: SCTL's LP64 calls forwarded to an ILP64 BLAS (as Julia's, see csrc/capi_blas.cpp)
+    const char* lib = std::getenv("SCTLJL_LIBBLAS64");
+    void* h = lib ? dlopen(lib, RTLD_NOW) : nullptr;
+    if (!h) { std::fprintf(stderr, "set SCTLJL_LIBBLAS64 to an ILP64 BLAS (e.g. Julia's libopenblas64_)\n"); return 1; }
+    auto sym = [h](const char* s) { void* p = dlsym(h, s); if (!p) { std::fprintf(stderr, "%s missing\n", s); std::exit(1); } return p; };
+    sctljl_set_blas(sym("dgemm_64_"), sym("sgemm_64_"), sym("dgesvd_64_"), sym("sgesvd_64_"));
+  }
+#endif
   data_dir = argc > 1 ? argv[1] : ".";
 
   { // quadrature: compute (what the wrapper calls) and the cached accessor

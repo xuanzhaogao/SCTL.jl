@@ -8,14 +8,20 @@ SCTL_ROOT=${1:-$HERE/../deps/SCTL}; shift || true
 THREADS=${@:-1 16}
 WORK=${BENCH_DIR:-$(mktemp -d)}
 mkdir -p "$WORK"
-# configuration of the shim build (PVFMM headers, OpenBLAS32 with LAPACK), so both sides run the same SCTL code
+# configuration of the shim build (PVFMM headers, BLAS/LAPACK), so both sides run the same SCTL code; with the
+# default BLAS (Julia's, through the shim's adapter) the native side uses the same adapter and Julia's libopenblas64_
 CONFIG=$(sed 's/ | /\n/' "$HERE/../deps/usr/obj/config.txt")
 CXXFLAGS_SHIM=$(echo "$CONFIG" | head -1 | cut -d' ' -f2- | sed 's/-fvisibility[^ ]*//g; s/-fPIC//')
 LDFLAGS_SHIM=$(echo "$CONFIG" | tail -1 | sed 's/-shared//')
-${CXX:-g++} $CXXFLAGS_SHIM -I"$SCTL_ROOT/include" "$HERE/bench_native.cpp" -o "$WORK/bench_native" $LDFLAGS_SHIM
+EXTRA_SRC=
+if echo "$CXXFLAGS_SHIM" | grep -q SCTLJL_BLAS_LBT; then
+  EXTRA_SRC="$HERE/../csrc/capi_blas.cpp -I$HERE/../csrc -ldl"
+  export SCTLJL_LIBBLAS64=${SCTLJL_LIBBLAS64:-$(${JULIA:-julia} -e 'using LinearAlgebra; print(BLAS.get_config().loaded_libs[1].libname)')}
+fi
+${CXX:-g++} $CXXFLAGS_SHIM -I"$SCTL_ROOT/include" "$HERE/bench_native.cpp" $EXTRA_SRC -o "$WORK/bench_native" $LDFLAGS_SHIM
 export PVFMM_DIR=${PVFMM_DIR:-$(${JULIA:-julia} --project="$HERE/.." -e 'using SCTL; print(SCTL.fmm_cache_dir())')}
 export OMP_WAIT_POLICY=PASSIVE   # what SCTL.jl sets on load; use it for both
-export OPENBLAS_NUM_THREADS=1    # likewise (SCTL calls BLAS inside OpenMP loops)
+export OPENBLAS_NUM_THREADS=1    # native side: what SCTL.jl's _serial_blas does around its calls
 for t in $THREADS; do
   export OMP_NUM_THREADS=$t
   ${JULIA:-julia} --project="$HERE/.." "$HERE/bench_julia.jl" "$WORK/data" > "$WORK/julia_$t.txt"

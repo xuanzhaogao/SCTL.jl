@@ -1,10 +1,11 @@
 # Builds libsctljl.so, the C-ABI shim over the header-only SCTL library (MPI-free).
 #
-#   make SCTL_ROOT=/path/to/SCTL [PVFMM_ROOT=/path/to/pvfmm] [BLAS_LIBDIR=/dir/with/libopenblas.so]
+#   make SCTL_ROOT=/path/to/SCTL [PVFMM_ROOT=/path/to/pvfmm] [BLAS=lbt | BLAS_LIBDIR=/dir/with/libopenblas.so]
 #        [CXX=g++] [EXTRA_CXXFLAGS=...] [EXTRA_LDFLAGS=...] [BUILDDIR=...] [SRCS=...]
 #
 # PVFMM_ROOT (a PVFMM checkout; only its headers are used, compiled without MPI) enables the FMM in ParticleFMM and
-# BoundaryIntegralOp. BLAS_LIBDIR (an LP64 OpenBLAS with LAPACK, e.g. from OpenBLAS32_jll) enables BLAS and LAPACK.
+# BoundaryIntegralOp. BLAS=lbt enables BLAS and LAPACK from Julia's libblastrampoline, set at load time (capi_blas.cpp;
+# the default of deps/build.jl); BLAS_LIBDIR instead links an LP64 libopenblas with LAPACK from that directory.
 #
 # Normally driven by deps/build.jl (`Pkg.build("SCTL")`).
 
@@ -22,7 +23,9 @@ LDFLAGS = -shared -fopenmp
 ifneq ($(PVFMM_ROOT),)
 CXXFLAGS += -DSCTL_HAVE_PVFMM -I$(PVFMM_ROOT)/include
 endif
-ifneq ($(BLAS_LIBDIR),)
+ifeq ($(BLAS),lbt)
+CXXFLAGS += -DSCTL_HAVE_BLAS -DSCTL_HAVE_LAPACK -DSCTLJL_BLAS_LBT
+else ifneq ($(BLAS_LIBDIR),)
 CXXFLAGS += -DSCTL_HAVE_BLAS -DSCTL_HAVE_LAPACK
 LDFLAGS += -L$(BLAS_LIBDIR) -lopenblas -Wl,-rpath,$(BLAS_LIBDIR)
 endif
