@@ -133,7 +133,10 @@ targets, Laplace at 6 digits takes:
 
 A direct sum takes about 10 s on 96 threads, so the FMM is roughly 125× faster here.
 
-**Precomputation is a one-time cost** per kernel and `digits`. It takes seconds for Laplace (≈ 20 s at 12 digits) and
+**Precomputation is a one-time cost** per translation kernel and `digits`. The operators depend only on the M2L
+kernel, so all Laplace kernels share one file per `digits` (`Precomp_Laplace3D-FxU_m<order>.data`), as do
+`Stokes3D_FxU` and `Stokes3D_DxU` (`Stokes3D-FSxU`), while `Stokes3D_FxT` has its own (`Stokes3D-FxU`).
+Computing them takes seconds for Laplace (≈ 20 s at 12 digits) and
 minutes for Stokes (≈ 1.5 min at 8 digits and ≈ 4 min at 10 digits on 16 threads). The operators are saved to
 [`SCTL.fmm_cache_dir`](@ref) and loaded from there afterwards.
 

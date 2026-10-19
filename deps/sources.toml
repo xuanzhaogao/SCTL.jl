@@ -4,8 +4,8 @@
 # the submodules.
 
 [SCTL]
-url = "https://github.com/xuanzhaogao/SCTL"
-commit = "cd6372ff99f38706beb92e7ba1f978722df54273"
+url = "https://github.com/dmalhotra/SCTL"
+commit = "12e7336db96b033718c7c45bfeb28583baa07733"
 
 [pvfmm]
 url = "https://github.com/dmalhotra/pvfmm"
