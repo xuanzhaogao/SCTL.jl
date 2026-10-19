@@ -1,0 +1,7 @@
+deps/usr/
+deps/build.log
+Manifest.toml
+*.vtu
+*.pvtu
+*.vtk
+bench/results/
