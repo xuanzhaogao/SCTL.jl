@@ -1,8 +1,10 @@
 // FMM translation kernels for each source-to-target (S2T) kernel, shared by ParticleFMM (capi_fmm.cpp) and
 // BoundaryIntegralOp (capi_bie*.cpp). Include after sctljl.hpp.
 //
-// PVFMM caches its precomputed operators in a file named after all kernels of an FMM, so a kernel must always get the
-// same translation kernels; the table below is the only place they are chosen. Translations act on equivalent
+// PVFMM caches its precomputed operators in a file named after the M2L kernel (Precomp_<M2L>_m<order>.data; the
+// operators follow from M2L), so setups sharing the M2L kernel share the file: all Laplace kernels here, Stokes3D_FxU
+// and _DxU (FSxU), and Stokes3D_FxT (FxU) on its own. The table below is the only place the translation kernels are
+// chosen. Translations act on equivalent
 // densities: the Laplace single layer for all Laplace kernels; for Stokes, the Stokeslet plus source (Stokes3D_FSxU)
 // for multipole expansions and the Stokeslet for local ones, as in sctl::ParticleFMM::test. S2L = S2M and M2L = M2M.
 #ifndef SCTLJL_FMM_SCHEMES_HPP

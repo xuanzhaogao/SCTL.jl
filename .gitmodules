@@ -1,6 +1,6 @@
 [submodule "deps/SCTL"]
 	path = deps/SCTL
-	url = https://github.com/xuanzhaogao/SCTL.git
+	url = https://github.com/dmalhotra/SCTL.git
 [submodule "deps/pvfmm"]
 	path = deps/pvfmm
 	url = https://github.com/dmalhotra/pvfmm.git

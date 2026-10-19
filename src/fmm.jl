@@ -10,7 +10,8 @@ const _UUID = Base.UUID("ac9f61ce-527e-4020-a439-f70cd5e361ae")
 """
     SCTL.fmm_cache_dir()
 
-Directory where PVFMM stores the operators it precomputes for each kernel and accuracy (files `Precomp_*.data`).
+Directory where PVFMM stores the operators it precomputes for each translation (M2L) kernel and accuracy (files
+`Precomp_<M2L kernel>_m<order>.data`; all Laplace kernels share one per order, as do `Stokes3D_FxU` and `_DxU`).
 Computing them takes from seconds (Laplace) to minutes (Stokes, high accuracy) the first time; later sessions load
 them. The directory is `ENV["PVFMM_DIR"]` if that is set when SCTL is loaded, otherwise a scratch space in the
 first Julia depot. Delete its files to force recomputation.
