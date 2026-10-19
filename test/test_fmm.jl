@@ -35,7 +35,8 @@ end
             U = fmm_evaluate(fmm)
             @test size(U) == (trg_dim(ker), NFMM)
             Uref = kernel_eval(ker, Xs, Xn_, F, Xt[:, sample])
-            @test relmax(U[:, sample], Uref) < (HAVE_PVFMM ? tol : 1e-12)
+            # also without PVFMM: the direct sum then evaluates the kernel to about `digits` digits
+            @test relmax(U[:, sample], Uref) < tol
             # new density on the same points (tree reused) and in-place output
             set_density!(fmm, -2 .* F)
             U2 = similar(U)
