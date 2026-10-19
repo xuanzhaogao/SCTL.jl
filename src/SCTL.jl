@@ -7,6 +7,7 @@ Julia wrapper for [SCTL](https://github.com/dmalhotra/SCTL), the Scientific Comp
 module SCTL
 
 using LinearAlgebra
+using SparseArrays
 
 include("lib.jl")
 include("quadrule.jl")
@@ -14,6 +15,7 @@ include("sph_harm.jl")
 include("kernels.jl")
 include("fmm.jl")
 include("bie.jl")
+include("bie_pieces.jl")
 include("gmres.jl")
 include("sdc.jl")
 include("tree.jl")
