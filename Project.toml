@@ -1,6 +1,6 @@
 name = "SCTL"
 uuid = "ac9f61ce-527e-4020-a439-f70cd5e361ae"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Xuanzhao Gao <xgao@flatironinstitute.org>"]
 
 [deps]
