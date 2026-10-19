@@ -5,3 +5,4 @@ Manifest.toml
 *.pvtu
 *.vtk
 bench/results/
+docs/build/

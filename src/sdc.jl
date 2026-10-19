@@ -111,7 +111,7 @@ end
     sdc_step(sdc, f!, u0, dt; picard_iters=-1, picard_tol=0, substeps=false, indices=false)
         -> (u=..., error_interp=..., error_picard=..., iters=..., substeps=...)
 
-One SDC step for ``u' = F(u)``: computes ``u = u_0 + \\int_0^{dt} F(u)\\,dt``.
+One SDC step for ``u' = F(u)``: computes ``u(dt) = u_0 + \\int_0^{dt} F(u(s))\\,ds``.
 
 `f!(dudt, u)` overwrites `dudt` with ``F(u)``. With `indices=true` it is called as
 `f!(dudt, u, correction_idx, substep_idx)` instead (the 0-based Picard iteration and substep indices, as in SCTL).

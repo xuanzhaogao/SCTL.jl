@@ -296,6 +296,7 @@ kernel_matrix!(K::Matrix{Float64}, ker::AbstractKernel, Xs, Xt; openmp::Bool=tru
 
 """
     kernel_eval!(U, ker, Xs, Xn, F, Xt; openmp=true, accumulate=false) -> U
+    kernel_eval!(U, ker, Xs, F, Xt; openmp=true, accumulate=false) -> U
 
 In-place [`kernel_eval`](@ref): write (or with `accumulate=true`, add) the potential at the targets into `U`, a
 `Float64` array with `trg_dim(ker)*Nt` elements (e.g. `trg_dim × Nt`).

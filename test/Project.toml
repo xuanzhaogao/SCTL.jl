@@ -1,4 +1,3 @@
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-SCTL = "ac9f61ce-527e-4020-a439-f70cd5e361ae"
 Test = "8dfed614-e22d-5e48-8b12-79e5d1e6c3fb"

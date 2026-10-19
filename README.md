@@ -1,5 +1,8 @@
 # SCTL.jl
 
+[![CI](https://github.com/xuanzhaogao/SCTL.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/xuanzhaogao/SCTL.jl/actions/workflows/CI.yml)
+[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://xuanzhaogao.github.io/SCTL.jl/dev/)
+
 Julia wrapper for [SCTL](https://github.com/dmalhotra/SCTL), the Scientific Computing Template Library
 (header-only C++). This is the MPI-free build and works in `Float64` only.
 
@@ -56,7 +59,8 @@ Tests: `julia --project=. test/runtests.jl`. This is about 1700 tests and takes 
 Not wrapped: MPI (`Comm`), `ParticleFMM`/PVFMM, the containers (`Vector`, `Matrix`, `Tensor`, `Vec`, memory
 managers; use Julia arrays), `VTUData`, `Profile`, the legacy `ChebBasis`, the GPU tree.
 
-Every exported function has a docstring (`?gmres`) that gives the exact array layouts. The conventions are:
+The [documentation](https://xuanzhaogao.github.io/SCTL.jl/dev/) has a manual page with a tutorial for each module, and
+every exported function has a docstring (`?gmres`) that gives the exact array layouts. The conventions are:
 
 - Points are `DIM × N` matrices, and per-point data (densities, potentials) is `dof × N`.
 - SCTL's row-major matrices are presented with the shape that makes `y = M * x` work in Julia, e.g.
