@@ -6,13 +6,14 @@
 Julia wrapper for [SCTL](https://github.com/dmalhotra/SCTL), the Scientific Computing Template Library
 (header-only C++). This is the MPI-free build and works in `Float64` only.
 
-It works through a thin C-ABI shim (`csrc/`) compiled against the SCTL headers into `libsctljl.so`, which Julia calls
+It works through a thin C-ABI shim (`csrc/`) compiled against the SCTL headers into `libsctljl.so` (`.dylib` on macOS), which Julia calls
 with `ccall`. SCTL errors and failed assertions do not abort the process. They are raised as `SCTL.SCTLError`, and
 exceptions thrown inside Julia callbacks (GMRES operators, ODE right-hand sides, integrands) are re-thrown unchanged.
 
 ## Installation
 
-Requirements: a C++17 compiler with OpenMP (GCC ≥ 9) and `make`. SCTL itself comes as a git submodule
+Requirements: a C++17 compiler with OpenMP (GCC ≥ 9) and `make`. On macOS, `/usr/bin/g++` is Apple Clang, which has
+no OpenMP: `brew install gcc`, and the build picks the newest `g++-N`. SCTL itself comes as a git submodule
 (`deps/SCTL`, pinned to the tested commit of https://github.com/dmalhotra/SCTL):
 
 ```bash
@@ -34,7 +35,7 @@ around 1.7 GB of RAM per compiler process). Build options are environment variab
 | variable | default | purpose |
 |:-|:-|:-|
 | `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL`, then a download | SCTL checkout |
-| `CXX` | `g++` | compiler |
+| `CXX` | `g++` (macOS: the newest Homebrew `g++-N`) | compiler with OpenMP |
 | `SCTL_JL_MARCH` | `-march=native` | e.g. `-march=x86-64-v3` for a library shared by machines with different CPUs |
 | `SCTL_JL_PVFMM` | `1` | `0` builds without the FMM; `PVFMM_ROOT` (default: the `deps/pvfmm` submodule) picks another PVFMM checkout |
 | `SCTL_JL_BLAS` | `1` | `0` builds without BLAS/LAPACK |
@@ -48,7 +49,7 @@ BLAS is limited to one thread (SCTL parallelizes with OpenMP). Without the git s
 uses its own FFT. `SCTL.has_feature(:PVFMM)`, `(:BLAS)` and so on report what was compiled in. `SCTL_JL_LIB=/path/libsctljl.so` points the package at another build; it is read when
 the package is precompiled, so changing it later needs a recompile.
 
-Tests: `julia --project=. test/runtests.jl`. This is about 1750 tests. The first run takes a few minutes, because it
+Tests: `julia --project=. test/runtests.jl`. This is about 1800 tests. The first run takes a few minutes, because it
 precomputes FMM operators; later runs take about 1 min.
 
 ## What is wrapped

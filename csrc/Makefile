@@ -40,7 +40,8 @@ $(shell mkdir -p $(BUILDDIR)/obj; [ "$$(cat $(CONFIG) 2>/dev/null)" = '$(CONFIG_
 SRCS ?= $(wildcard capi_*.cpp)
 OBJDIR = $(BUILDDIR)/obj
 OBJS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
-LIB = $(BUILDDIR)/lib/libsctljl.so
+# Libdl.dlext of Julia
+LIB = $(BUILDDIR)/lib/libsctljl.$(if $(filter Darwin,$(shell uname -s)),dylib,so)
 
 all: $(LIB)
 

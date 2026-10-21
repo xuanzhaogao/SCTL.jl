@@ -18,6 +18,8 @@ speed as calling SCTL from C++ (see [Performance](@ref)). This is the MPI-free b
 ## Installation
 
 You need a C++17 compiler with OpenMP (GCC ≥ 9) and `make`. SCTL itself comes as a git submodule of the package.
+On macOS, `/usr/bin/g++` is Apple Clang, which has no OpenMP: install GCC with `brew install gcc`, and the build
+picks the newest `g++-N` it finds.
 
 ```bash
 git clone --recursive https://github.com/xuanzhaogao/SCTL.jl.git
@@ -26,7 +28,7 @@ git clone --recursive https://github.com/xuanzhaogao/SCTL.jl.git
 ```julia
 using Pkg
 Pkg.develop(path = "SCTL.jl")
-Pkg.build("SCTL")      # compiles the C++ shim into SCTL.jl/deps/usr/lib/libsctljl.so (a few minutes)
+Pkg.build("SCTL")      # compiles the C++ shim into SCTL.jl/deps/usr/lib/libsctljl.so (.dylib on macOS; a few minutes)
 ```
 
 Or let Pkg clone it: `Pkg.develop(url = "https://github.com/xuanzhaogao/SCTL.jl")`, then `Pkg.build("SCTL")`. Such a
@@ -39,14 +41,14 @@ These environment variables are read by `Pkg.build`:
 | variable | default | purpose |
 |:--|:--|:--|
 | `SCTL_ROOT` | `deps/SCTL` (submodule), then `../SCTL`, then a download | the SCTL checkout to compile against |
-| `CXX` | `g++` | C++ compiler |
+| `CXX` | `g++` (macOS: the newest Homebrew `g++-N`) | C++ compiler with OpenMP |
 | `SCTL_JL_MARCH` | `-march=native` | target CPU, e.g. `-march=x86-64-v3` when one build serves different machines |
 | `SCTL_JL_PVFMM` | `1` | `0` builds without the FMM (the `deps/pvfmm` submodule); `PVFMM_ROOT` picks another checkout |
 | `SCTL_JL_BLAS` | `1` | `0` builds without BLAS/LAPACK (by default Julia's own, see [Optional dependencies](@ref)) |
 | `SCTL_JL_CXXFLAGS` | | extra flags, e.g. `-DSCTL_HAVE_FFTW` |
 | `SCTL_JL_LDFLAGS` | | extra link flags, e.g. `-lfftw3` |
 
-Run the tests with `julia --project=. test/runtests.jl` (about 1700 tests, under a minute).
+Run the tests with `julia --project=. test/runtests.jl` (about 1800 tests, under a minute).
 
 ## A first example
 
