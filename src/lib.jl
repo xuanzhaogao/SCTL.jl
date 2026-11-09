@@ -157,7 +157,8 @@ set_num_threads(n::Integer) = ccall((:sctljl_set_num_threads, libsctljl), Cvoid,
     SCTL.has_feature(name)
 
 Whether the compiled library has an optional dependency enabled; `name` is one of `:PVFMM`, `:BLAS`, `:LAPACK`, `:FFTW`,
-`:MPI`, or `:BLAS_LBT` (BLAS and LAPACK are Julia's own, through libblastrampoline: the default build).
+`:MPI`, or `:BLAS_LBT` (BLAS and LAPACK are Julia's own, through libblastrampoline: the default build). Also
+`:EXACT_NEAR`: [`ParticleFMM`](@ref) evaluates close source–target pairs at full precision (see there).
 """
 has_feature(name) = ccall((:sctljl_have, libsctljl), Cint, (Cstring,), string(name)) != 0
 

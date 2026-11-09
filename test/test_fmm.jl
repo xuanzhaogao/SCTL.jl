@@ -51,6 +51,23 @@ end
     @test fmm_eval(Laplace3D_FxU(), Xs, F, Xt[:, 1:500]; digits = 6) ≈ kernel_eval(Laplace3D_FxU(), Xs, F, Xt[:, 1:500]) rtol = 1e-5
 end
 
+@testset "ParticleFMM: close source-target pairs at full precision" begin
+    # one unit charge at x0 and a target r away, among NFMM targets (so that PVFMM runs): the potential and its
+    # gradient against the exact values of the given points; mapped into PVFMM's unit box and rounded, the pair would
+    # be off by ~1e-16/r (1.5e-6 at r = 1e-10, dmalhotra/pvfmm#39)
+    @test SCTL.has_feature(:EXACT_NEAR)
+    x0 = [0.1234567890123, -0.2345678901234, 0.3456789012345]; e = [0.6, 0.48, 0.64]
+    far = reshape(_lcg(3 * NFMM, 7), 3, :) .- 0.5
+    for r in (1e-4, 1e-8, 1e-12)
+        Xt = hcat(x0 .+ r .* e, far)
+        d = big.(Xt[:, 1]) .- big.(x0); rr = sqrt(sum(d .^ 2))
+        u = fmm_eval(Laplace3D_FxU(), reshape(x0, 3, 1), ones(1, 1), Xt; digits = 10)[1]
+        g = fmm_eval(Laplace3D_FxdU(), reshape(x0, 3, 1), ones(1, 1), Xt; digits = 10)[:, 1]
+        @test abs(u - 1 / (4π * rr)) * 4π * rr < 1e-14
+        @test maximum(abs.(g .+ d ./ (4π * rr^3))) * 4π * rr^2 < 1e-14
+    end
+end
+
 @testset "ParticleFMM errors" begin
     fmm = ParticleFMM(Laplace3D_DxU(); digits = 4)
     @test_throws ArgumentError fmm_evaluate(fmm)                       # nothing set
