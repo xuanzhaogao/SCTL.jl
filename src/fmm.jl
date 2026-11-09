@@ -70,7 +70,10 @@ all of this in one call.
   periodic axis.
 
 The FMM is used for 40000 or more targets, or with periodicity; smaller problems are summed directly (SCTL's
-choice). It needs the library built with PVFMM ([`SCTL.has_feature`](@ref)`(:PVFMM)`); otherwise every evaluation
+choice). Close pairs keep full relative accuracy ([`SCTL.has_feature`](@ref)`(:EXACT_NEAR)`): PVFMM works in its
+unit box, whose coordinates are rounded (a pair a distance r apart would be off by ~1e-16/r relative), so the
+interactions it sums directly (its near field) are summed by SCTL from the original coordinates instead; with
+periodicity they are PVFMM's. It needs the library built with PVFMM ([`SCTL.has_feature`](@ref)`(:PVFMM)`); otherwise every evaluation
 is a direct sum, and periodicity is unavailable. The first evaluation for a kernel and `digits` precomputes
 translation operators, cached on disk ([`SCTL.fmm_cache_dir`](@ref)).
 

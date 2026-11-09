@@ -55,5 +55,8 @@ SCTLJL_EXPORT int sctljl_have(const char* feature) {
 #ifdef SCTL_HAVE_PVFMM
   if (f == "PVFMM") return 1;
 #endif
+#if defined(SCTL_FMM_EXACT_NEAR) || !defined(SCTL_HAVE_PVFMM)
+  if (f == "EXACT_NEAR") return 1;   // ParticleFMM's near field from the original coordinates (or all direct sums)
+#endif
   return 0;
 }
